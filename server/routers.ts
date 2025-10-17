@@ -5,6 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { tenantRouter } from "./routers/tenant";
 import { aiRouter } from "./routers/ai";
 import { crmRouter } from "./routers/crm";
+import { complianceRouter } from "./routers/compliance";
 
 export const appRouter = router({
   system: systemRouter,
@@ -24,6 +25,7 @@ export const appRouter = router({
   tenant: tenantRouter,
   ai: aiRouter,
   crm: crmRouter,
+  compliance: complianceRouter,
 });
 
 export type AppRouter = typeof appRouter;

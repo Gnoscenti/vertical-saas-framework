@@ -321,3 +321,90 @@ export const analyticsEvents = mysqlTable("analytics_events", {
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;
 
+
+
+/**
+ * Compliance checklists - templates for different business types and regions
+ */
+export const complianceChecklists = mysqlTable("compliance_checklists", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  version: varchar("version", { length: 20 }).notNull(),
+  region: varchar("region", { length: 100 }),
+  businessType: varchar("businessType", { length: 100 }),
+  sections: json("sections").$type<Array<{
+    id: string;
+    title: string;
+    description: string;
+    items: Array<{
+      id: string;
+      label: string;
+      details: string;
+      link?: string;
+      note?: string;
+      frequency?: 'once' | 'quarterly' | 'annually' | 'monthly';
+      dueDate?: string;
+    }>;
+  }>>().notNull(),
+  metadata: json("metadata").$type<Record<string, any>>(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+}, (table) => ({
+  regionIdx: index("region_idx").on(table.region),
+  businessTypeIdx: index("business_type_idx").on(table.businessType),
+}));
+
+export type ComplianceChecklist = typeof complianceChecklists.$inferSelect;
+export type InsertComplianceChecklist = typeof complianceChecklists.$inferInsert;
+
+/**
+ * Tenant compliance tracking - tracks completion status for each tenant
+ */
+export const tenantCompliance = mysqlTable("tenant_compliance", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  tenantId: varchar("tenantId", { length: 64 }).notNull(),
+  checklistId: varchar("checklistId", { length: 64 }).notNull(),
+  itemId: varchar("itemId", { length: 64 }).notNull(),
+  status: mysqlEnum("status", ["not_started", "in_progress", "completed", "skipped"]).default("not_started").notNull(),
+  completedAt: timestamp("completedAt"),
+  completedBy: varchar("completedBy", { length: 64 }),
+  notes: text("notes"),
+  attachments: json("attachments").$type<Array<{ name: string; url: string; uploadedAt: string }>>(),
+  nextDueDate: timestamp("nextDueDate"),
+  reminderSent: boolean("reminderSent").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+}, (table) => ({
+  tenantIdx: index("tenant_idx").on(table.tenantId),
+  checklistIdx: index("checklist_idx").on(table.checklistId),
+  statusIdx: index("status_idx").on(table.status),
+  dueDateIdx: index("due_date_idx").on(table.nextDueDate),
+}));
+
+export type TenantCompliance = typeof tenantCompliance.$inferSelect;
+export type InsertTenantCompliance = typeof tenantCompliance.$inferInsert;
+
+/**
+ * Compliance reminders - scheduled reminders for upcoming deadlines
+ */
+export const complianceReminders = mysqlTable("compliance_reminders", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  tenantId: varchar("tenantId", { length: 64 }).notNull(),
+  complianceId: varchar("complianceId", { length: 64 }).notNull(),
+  reminderType: mysqlEnum("reminderType", ["email", "notification", "sms"]).notNull(),
+  scheduledFor: timestamp("scheduledFor").notNull(),
+  sent: boolean("sent").default(false).notNull(),
+  sentAt: timestamp("sentAt"),
+  message: text("message").notNull(),
+  metadata: json("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("createdAt").defaultNow(),
+}, (table) => ({
+  tenantIdx: index("tenant_idx").on(table.tenantId),
+  scheduledIdx: index("scheduled_idx").on(table.scheduledFor),
+  sentIdx: index("sent_idx").on(table.sent),
+}));
+
+export type ComplianceReminder = typeof complianceReminders.$inferSelect;
+export type InsertComplianceReminder = typeof complianceReminders.$inferInsert;
+

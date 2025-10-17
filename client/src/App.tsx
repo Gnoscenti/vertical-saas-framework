@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
-import Home from './pages/Home';
+import Home from "./pages/Home";
+import Compliance from "./pages/Compliance";
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import ComponentShowcase from './pages/ComponentShowcase';
@@ -13,7 +14,8 @@ function App() {
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path={"/"} element={<Home />} />
+            <Route path={"/compliance/:tenantId"} element={<Compliance />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard/:tenantId" element={<Dashboard />} />
             <Route path="/showcase" element={<ComponentShowcase />} />
